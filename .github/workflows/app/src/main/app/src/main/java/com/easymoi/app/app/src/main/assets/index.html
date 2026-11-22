@@ -1,0 +1,100 @@
+
+<!DOCTYPE html>
+<html lang="ta">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Easy Moi</title>
+<style>
+body{font-family:Arial,sans-serif;background:#f2f5f9;margin:0;padding:16px;color:#172033}
+header{background:#123d70;color:white;padding:18px;border-radius:14px}
+h2{margin:0 0 8px}
+.card{background:white;padding:16px;margin-top:14px;border-radius:12px;box-shadow:0 2px 8px #ddd}
+input,select,button{box-sizing:border-box;width:100%;padding:12px;margin:6px 0;border:1px solid #ccd3df;border-radius:8px;font-size:16px}
+button{background:#1769aa;color:white;border:0;font-weight:bold}
+.entry{border-bottom:1px solid #ddd;padding:10px 0}
+.total{font-size:25px;font-weight:bold;color:#087443}
+.small{font-size:13px;color:#667}
+</style>
+</head>
+<body>
+<header>
+<h2>Easy Moi</h2>
+Tamil + English | Offline Moi Ledger
+</header>
+
+<div class="card">
+<label>Function / நிகழ்ச்சி பெயர்</label>
+<input id="event" placeholder="உதா: Wedding / திருமணம்">
+<button onclick="saveEvent()">Create / Save Function</button>
+<select id="events" onchange="showEntries()"></select>
+</div>
+
+<div class="card">
+<h3>New Moi Entry / புதிய பதிவு</h3>
+<input id="person" placeholder="பெயர் / Name">
+<input id="town" placeholder="ஊர் / Town">
+<input id="phone" placeholder="Phone Number">
+<input id="amount" type="number" placeholder="தொகை / Amount ₹">
+<select id="type">
+<option>Cash</option>
+<option>Online</option>
+<option>Other</option>
+</select>
+<button onclick="addEntry()">Add Moi / பதிவு செய்</button>
+</div>
+
+<div class="card">
+<h3>Total Moi / மொத்தம்</h3>
+<div class="total" id="total">₹0</div>
+<p id="count" class="small">0 Entries</p>
+<input id="search" placeholder="Search name / ஊர்" oninput="showEntries()">
+<div id="list"></div>
+</div>
+
+<script>
+let data=JSON.parse(localStorage.getItem("easymoi")||"{}");
+function save(){localStorage.setItem("easymoi",JSON.stringify(data))}
+function current(){return document.getElementById("events").value}
+function refresh(){
+let s=document.getElementById("events"),old=s.value;
+s.innerHTML="";
+Object.keys(data).forEach(k=>{let o=document.createElement("option");o.value=k;o.textContent=k;s.appendChild(o)});
+if(data[old])s.value=old;
+showEntries();
+}
+function saveEvent(){
+let n=document.getElementById("event").value.trim();
+if(!n)return alert("Enter function name");
+if(!data[n])data[n]=[];
+save();document.getElementById("event").value="";refresh();document.getElementById("events").value=n;showEntries();
+}
+function addEntry(){
+let e=current(),p=document.getElementById("person").value.trim();
+let a=Number(document.getElementById("amount").value);
+if(!e)return alert("Create a function first");
+if(!p||a<=0)return alert("Enter name and valid amount");
+data[e].push({p,t:document.getElementById("town").value,ph:document.getElementById("phone").value,a,type:document.getElementById("type").value});
+save();
+["person","town","phone","amount"].forEach(x=>document.getElementById(x).value="");
+showEntries();
+}
+function showEntries(){
+let e=current(),q=document.getElementById("search").value.toLowerCase(),arr=data[e]||[];
+let total=arr.reduce((s,x)=>s+x.a,0);
+document.getElementById("total").textContent="₹"+total.toLocaleString("en-IN");
+document.getElementById("count").textContent=arr.length+" Entries";
+document.getElementById("list").innerHTML="";
+arr.forEach((x,i)=>{
+if(!(x.p+" "+x.t+" "+x.ph).toLowerCase().includes(q))return;
+let d=document.createElement("div");d.className="entry";
+let b=document.createElement("button");b.textContent="Delete";
+b.onclick=()=>{if(confirm("Delete this entry?")){arr.splice(i,1);save();showEntries()}};
+d.textContent=x.p+" | "+x.t+" | ₹"+x.a+" | "+x.type+" ";
+d.appendChild(b);document.getElementById("list").appendChild(d);
+});
+}
+refresh();
+</script>
+</body>
+</html>
